@@ -85,7 +85,9 @@ typedef NS_ENUM(NSInteger, MenuMode) {
 
 typedef NS_ENUM(NSInteger, MenuItem) {
     MenuItemEnabled = 0,
-    MenuItemAccelDisabled,
+    MenuItemAccelWheelDisabled,
+    MenuItemAccelWheelSpeed,
+    MenuItemAccelMouseDisabled,
     MenuItemEnabledSeparator,
     MenuItemTriggerOnMouseDown,
     MenuItemSwapButtons,
@@ -183,13 +185,23 @@ typedef NS_ENUM(NSInteger, MenuItem) {
         menu.autoenablesItems = NO;
         menu.delegate = self;
         
-        NSMenuItem* enabledItem = [[NSMenuItem alloc] initWithTitle:@"Enabled" action:@selector(enabledToggle:) keyEquivalent:@"e"];
+        NSMenuItem* enabledItem = [[NSMenuItem alloc] initWithTitle:@"Enable Back/Forward" action:@selector(enabledToggle:) keyEquivalent:@"e"];
         [menu addItem:enabledItem];
         assert(menu.itemArray.count - 1 == MenuItemEnabled);
         
-        NSMenuItem* accelDisabledItem = [[NSMenuItem alloc] initWithTitle:@"Disable Scroll Wheel Acceleration" action:@selector(accelDisabledToggle:) keyEquivalent:@"a"];
-        [menu addItem:accelDisabledItem];
-        assert(menu.itemArray.count - 1 == MenuItemAccelDisabled);
+        NSMenuItem* accelWheelDisabledItem = [[NSMenuItem alloc] initWithTitle:@"Disable Scroll Wheel Acceleration" action:@selector(accelDisabledToggle:) keyEquivalent:@"a"];
+        [menu addItem:accelWheelDisabledItem];
+        assert(menu.itemArray.count - 1 == MenuItemAccelWheelDisabled);
+        
+        NSMenuItem* accelWheelSpeedItem = [[NSMenuItem alloc] initWithTitle:@"Slider" action:NULL keyEquivalent:@""];
+        NSSlider* accelWheelSpeedSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(0, 0, 200, 30)];
+        accelWheelSpeedItem.view = accelWheelSpeedSlider;
+        [menu addItem:accelWheelSpeedItem];
+        assert(menu.itemArray.count - 1 == MenuItemAccelWheelSpeed);
+        
+        NSMenuItem* accelMouseDisabledItem = [[NSMenuItem alloc] initWithTitle:@"Disable Mouse Acceleration" action:@selector(accelDisabledToggle:) keyEquivalent:@"m"];
+        [menu addItem:accelMouseDisabledItem];
+        assert(menu.itemArray.count - 1 == MenuItemAccelMouseDisabled);
         
         [menu addItem:[NSMenuItem separatorItem]];
         assert(menu.itemArray.count - 1 == MenuItemEnabledSeparator);
@@ -266,7 +278,7 @@ typedef NS_ENUM(NSInteger, MenuItem) {
     NSDictionary* options = @{ (__bridge id)kAXTrustedCheckOptionPrompt: @(active ? YES : NO) };
     BOOL accessibilityEnabled = AXIsProcessTrustedWithOptions((CFDictionaryRef)options);
     //BOOL accessibilityEnabled = YES; //is accessibility even required? seems to work fine without it
-    
+    //accessibilityEnabled = FALSE;
     if (accessibilityEnabled) {
         if ([[NSUserDefaults standardUserDefaults] boolForKey:@"SBFDonated"]) {
             self.menuMode = MenuModeNormal;
@@ -285,14 +297,15 @@ typedef NS_ENUM(NSInteger, MenuItem) {
 
 -(void) refreshSettings {
     self.statusItem.menu.itemArray[MenuItemEnabled].state = self.tap != NULL && CGEventTapIsEnabled(self.tap);
-    self.statusItem.menu.itemArray[MenuItemAccelDisabled].state = self.scrollTap != NULL && CGEventTapIsEnabled(self.scrollTap);
+    self.statusItem.menu.itemArray[MenuItemAccelWheelDisabled].state = self.scrollTap != NULL && CGEventTapIsEnabled(self.scrollTap);
     self.statusItem.menu.itemArray[MenuItemTriggerOnMouseDown].state = [[NSUserDefaults standardUserDefaults] boolForKey:@"SBFMouseDown"];
     self.statusItem.menu.itemArray[MenuItemSwapButtons].state = [[NSUserDefaults standardUserDefaults] boolForKey:@"SBFSwapButtons"];
     
     switch (self.menuMode) {
         case MenuModeAccessibility:
             self.statusItem.menu.itemArray[MenuItemEnabled].enabled = NO;
-            self.statusItem.menu.itemArray[MenuItemAccelDisabled].enabled = NO;
+            self.statusItem.menu.itemArray[MenuItemAccelWheelDisabled].enabled = NO;
+            self.statusItem.menu.itemArray[MenuItemAccelMouseDisabled].enabled = NO;
             self.statusItem.menu.itemArray[MenuItemTriggerOnMouseDown].enabled = NO;
             self.statusItem.menu.itemArray[MenuItemSwapButtons].enabled = NO;
             self.statusItem.menu.itemArray[MenuItemDonate].hidden = YES;
@@ -301,7 +314,8 @@ typedef NS_ENUM(NSInteger, MenuItem) {
             break;
         case MenuModeDonation:
             self.statusItem.menu.itemArray[MenuItemEnabled].enabled = YES;
-            self.statusItem.menu.itemArray[MenuItemAccelDisabled].enabled = YES;
+            self.statusItem.menu.itemArray[MenuItemAccelWheelDisabled].enabled = YES;
+            self.statusItem.menu.itemArray[MenuItemAccelMouseDisabled].enabled = YES;
             self.statusItem.menu.itemArray[MenuItemTriggerOnMouseDown].enabled = YES;
             self.statusItem.menu.itemArray[MenuItemSwapButtons].enabled = YES;
             self.statusItem.menu.itemArray[MenuItemDonate].hidden = NO;
@@ -310,7 +324,8 @@ typedef NS_ENUM(NSInteger, MenuItem) {
             break;
         case MenuModeNormal:
             self.statusItem.menu.itemArray[MenuItemEnabled].enabled = YES;
-            self.statusItem.menu.itemArray[MenuItemAccelDisabled].enabled = YES;
+            self.statusItem.menu.itemArray[MenuItemAccelWheelDisabled].enabled = YES;
+            self.statusItem.menu.itemArray[MenuItemAccelMouseDisabled].enabled = YES;
             self.statusItem.menu.itemArray[MenuItemTriggerOnMouseDown].enabled = YES;
             self.statusItem.menu.itemArray[MenuItemSwapButtons].enabled = YES;
             self.statusItem.menu.itemArray[MenuItemDonate].hidden = YES;
